@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def extract_news(parser):
+def extract_news(parser: BeautifulSoup)->list:
     """ Extract news from a given web page """
     news_list = []
     news_table = parser.table.findAll('table')[1]
@@ -41,7 +41,7 @@ def extract_news(parser):
     return news_list
 
 
-def get_news(url='https://news.ycombinator.com/', n_pages=1):
+def get_news(url='https://news.ycombinator.com/', n_pages=1) ->list:
     """ Collect news from a given web page """
     news = []
     if "=" in url:
