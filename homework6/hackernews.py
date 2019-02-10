@@ -1,6 +1,4 @@
-from bottle import (
-    route, run, template, request, redirect
-)
+import bottle
 
 from scrapper import get_news
 from db import News, session
