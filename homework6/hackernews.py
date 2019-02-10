@@ -1,4 +1,4 @@
-import bottle
+from bottle import route, run, template, redirect
 
 from scrapper import get_news
 from db import News, session
@@ -14,21 +14,35 @@ def news_list():
 
 @route("/add_label/")
 def add_label():
-    # PUT YOUR CODE HERE
     redirect("/news")
 
 
 @route("/update")
 def update_news():
-    # PUT YOUR CODE HERE
+    s = session()
+    recent_news = get_news()
+    authors = [news['author'] for news in recent_news]
+    titles = s.query(News.title).filter(News.author.in_(authors)).subquery()
+    existing_news = s.query(News).filter(News.title.in_(titles)).all()
+    for news in recent_news:
+        if not existing_news:
+            news_add = News(title=news['title'],
+                            author=news['author'],
+                            url=news['url'],
+                            comments=news['comments'],
+                            points=news['points'])
+            s.add(news_add)
+    s.commit()
     redirect("/news")
 
 
 @route("/classify")
 def classify_news():
-    # PUT YOUR CODE HERE
+    pass
+
+
+# PUT YOUR CODE HERE
 
 
 if __name__ == "__main__":
     run(host="localhost", port=8080)
-

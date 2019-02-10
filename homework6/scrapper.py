@@ -41,7 +41,7 @@ def extract_news(parser):
     return news_list
 
 
-def get_news(url, n_pages=1):
+def get_news(url='https://news.ycombinator.com/', n_pages=1):
     """ Collect news from a given web page """
     news = []
     if "=" in url:
