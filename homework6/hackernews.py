@@ -1,4 +1,4 @@
-from bottle import route, run, template, redirect
+from bottle import route, run, template, redirect,request
 
 from scrapper import get_news
 from db import News, session
@@ -14,6 +14,12 @@ def news_list():
 
 @route("/add_label/")
 def add_label():
+    s = session()
+    label = request.query.label
+    row_id = request.query.id
+    row = s.query(News).filter(News.id == row_id).one()
+    row.label = label
+    s.commit()
     redirect("/news")
 
 
