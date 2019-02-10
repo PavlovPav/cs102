@@ -1,4 +1,6 @@
 import math
+
+
 class NaiveBayesClassifier:
 
     def __init__(self, alpha=1):
@@ -62,4 +64,10 @@ class NaiveBayesClassifier:
 
     def score(self, X_test, y_test):
         """ Returns the mean accuracy on the given test data and labels. """
-        pass
+        prediction = self.predict(X_test)
+        count = 0
+        for i in range(len(prediction)):
+            if prediction[i] == y_test[i]:
+                count += 1
+        score = count / len(y_test)
+        return score
