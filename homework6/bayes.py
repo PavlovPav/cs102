@@ -1,7 +1,7 @@
 import math
 class NaiveBayesClassifier:
 
-    def __init__(self, alpha):
+    def __init__(self, alpha=1):
         self.alpha = alpha
         self.labels = []
         self.table = []
@@ -21,7 +21,7 @@ class NaiveBayesClassifier:
         self.p_labels = [math.log(number / sum(labels_count)) for number in labels_count]
 
         for i in range(len(X)):
-            words = divide(X[i])
+            words = X[i].split()
             for word in words:
                 if word in self.table[0]:
                     self.table[y[i]][self.table[0].index(word)] += 1
@@ -43,13 +43,23 @@ class NaiveBayesClassifier:
                 self.table[column][line] = (self.table[column - classes][line] + self.alpha) / \
                                            (sums[column - classes - 1] + self.alpha * dim)
 
-        pass
-
     def predict(self, X):
         """ Perform classification on an array of test vectors X. """
-        pass
+        labels = []
+        classes = len(self.labels)
+        for string in X:
+            string_labels = [i for i in self.p_labels]
+            words = string.split()
+            for word in words:
+                if word in self.table[0]:
+                    for i in range(classes):
+                        string_labels[i] += math.log(self.table[i + classes + 1][self.table[0].index(word)])
+            for i in range(classes):
+                if string_labels[i] == max(string_labels):
+                    labels.append(self.labels[i])
+                    break
+        return labels
 
     def score(self, X_test, y_test):
         """ Returns the mean accuracy on the given test data and labels. """
         pass
-
