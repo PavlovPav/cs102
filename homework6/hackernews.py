@@ -55,8 +55,10 @@ def classify_news():
     blank_rows = s.query(News).filter(News.label == None).all()
     x = [row.title for row in blank_rows]
     labels = classifier.predict(x)
-    classified_news = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'good']
-    return template('recommended', rows=classified_news)
+    good = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'good']
+    maybe = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'maybe']
+    never = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'never']
+    return template('recommended', {'good': good,'never': never,'maybe':maybe})
 
 
 if __name__ == "__main__":

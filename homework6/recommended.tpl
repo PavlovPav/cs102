@@ -16,10 +16,43 @@
                 <th>#Comments</th>
                 <th colspan="3">Label</th>
             </thead>
+            <style>
+            .maybe{
+                color:blue;
+            }
+            .good{
+                color:green;
+            }
+            .never{
+                color:red;
+            }
+            </style>
             <tbody>
-                %for row in rows:
+                %for row in good:
                 <tr>
-                    <td><a href="{{ row.url }}">{{ row.title }}</a></td>
+                    <td><a class = "good" href="{{ row.url }}">{{ row.title }}</a></td>
+                    <td>{{ row.author }}</td>
+                    <td>{{ row.points }}</td>
+                    <td>{{ row.comments }}</td>
+                    <td class="positive"><a href="/add_label/?label=good&id={{ row.id }}&classify=True">интересно</a></td>
+                    <td class="active"><a href="/add_label/?label=maybe&id={{ row.id }}&classify=True">возможно</a></td>
+                    <td class="negative"><a href="/add_label/?label=never&id={{ row.id }}&classify=True">неинтересно</a></td>
+                </tr>
+                %end
+                %for row in maybe:
+                <tr>
+                    <td><a class="maybe" href="{{ row.url }}">{{ row.title }}</a></td>
+                    <td>{{ row.author }}</td>
+                    <td>{{ row.points }}</td>
+                    <td>{{ row.comments }}</td>
+                    <td class="positive"><a href="/add_label/?label=good&id={{ row.id }}&classify=True">интересно</a></td>
+                    <td class="active"><a href="/add_label/?label=maybe&id={{ row.id }}&classify=True">возможно</a></td>
+                    <td class="negative"><a href="/add_label/?label=never&id={{ row.id }}&classify=True">неинтересно</a></td>
+                </tr>
+                %end
+                %for row in never:
+                <tr>
+                    <td><a class = "never" href="{{ row.url }}">{{ row.title }}</a></td>
                     <td>{{ row.author }}</td>
                     <td>{{ row.points }}</td>
                     <td>{{ row.comments }}</td>
