@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def extract_news(parser: BeautifulSoup)->list:
+def extract_news(parser)->list:
     """ Extract news from a given web page """
     news_list = []
     news_table = parser.table.findAll('table')[1]
@@ -44,10 +44,7 @@ def extract_news(parser: BeautifulSoup)->list:
 def get_news(url='https://news.ycombinator.com/', n_pages=1) ->list:
     """ Collect news from a given web page """
     news = []
-    if "=" in url:
-        next_index = int(url[url.index("=") + 1:])
-    else:
-        next_index = 1
+    next_index = 1
     while n_pages:
         print("Collecting data from page: {}".format(url))
         response = requests.get(url)
