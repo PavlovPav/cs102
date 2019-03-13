@@ -15,19 +15,20 @@ class Pool():
         proc.start()
 
         proc_info = psutil.Process(proc.pid)
-        mem = proc_info.memory_info().rss / 1024 / 1024  #return in Mb
+        self.mem = proc_info.memory_info().rss / 1024 / 1024  #return in Mb
         # print(psutil.cpu_percent(interval=None))
 
         procs[0].join()
 
-        defer_count = int(self.mem_usage / mem - self.mem_usage / mem / 100 * 10)
-        if defer_count == 0: defer_count = 1
+        self.defer_count = int(self.mem_usage / self.mem - self.mem_usage / self.mem / 100 * 10)
+        self.defer_count = 1 if self.defer_count==0 else self.defer_count
 
         while not args.empty():
-            for _ in range(defer_count):
+            for _ in range(self.defer_count):
                 if args.empty(): break
                 proc = Process(target=function, args=(args.get(),))
                 procs.append(proc)
                 proc.start()
             for proc in procs:
                 proc.join()
+        return self.defer_count,self.mem
