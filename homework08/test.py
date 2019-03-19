@@ -1,6 +1,5 @@
 import unittest
 from Pool import Pool
-import os
 import random
 import queue
 

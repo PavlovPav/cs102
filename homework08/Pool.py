@@ -36,7 +36,6 @@ class Pool():
             procs.append(proc)
             proc.start()
 
-
         while not args.empty():
             for idx, proc in enumerate(procs):
                 if args.empty(): break
