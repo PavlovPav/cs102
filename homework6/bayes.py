@@ -21,7 +21,6 @@ class NaiveBayesClassifier:
 
         self.table = [[] for _ in range(classes * 2 + 1)]
         self.p_labels = [math.log(number / sum(labels_count)) for number in labels_count]
-
         for i in range(len(X)):
             words = X[i].split()
             for word in words:

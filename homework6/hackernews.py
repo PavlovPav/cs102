@@ -15,7 +15,7 @@ def news_list():
 @route("/add_label/")
 def add_label():
     s = session()
-    print(request)
+    #print(request)
     label = request.query.label
     row_id = request.query.id
     row = s.query(News).filter(News.id == row_id).one()
