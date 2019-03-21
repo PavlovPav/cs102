@@ -1,5 +1,6 @@
 from multiprocessing import Process, cpu_count
 import psutil
+from time import sleep
 
 
 class Pool():
@@ -13,12 +14,13 @@ class Pool():
         proc = Process(target=function, args=(args.get(),))
         procs.append(proc)
         proc.start()
+        mem_count = []
+        while proc.is_alive():
+            proc_info = psutil.Process(proc.pid)
+            mem_count.append(proc_info.memory_info().rss / 1024 / 1024)  # return in Mb
+            sleep(0.0001)
 
-        proc_info = psutil.Process(proc.pid)
-        self.memory = proc_info.memory_info().rss / 1024 / 1024  # return in Mb
-        # print(psutil.cpu_percent(interval=None))
-
-        procs[0].join()
+        self.memory = max(mem_count)
 
         self.worker_count = int(self.mem_usage / (self.memory + self.memory / 100 * 10))
         self.worker_count = 1 if self.worker_count == 0 else self.worker_count
