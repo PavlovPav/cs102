@@ -19,7 +19,6 @@ class Pool():
             proc_info = psutil.Process(proc.pid)
             mem_count.append(proc_info.memory_info().rss / 1024 / 1024)  # return in Mb
             sleep(0.0001)
-
         self.memory = max(mem_count)
 
         self.worker_count = int(self.mem_usage / (self.memory + self.memory / 100 * 10))
@@ -27,7 +26,7 @@ class Pool():
 
         if self.worker_count > self.max_workers: self.worker_count = self.max_workers
         if self.worker_count < self.min_workers:
-            raise Exception("The number of required workers is less than the minimum specified.")
+            raise MemoryError("The number of required workers is less than the minimum specified.")
 
         for _ in range(self.worker_count):
             if args.empty():
