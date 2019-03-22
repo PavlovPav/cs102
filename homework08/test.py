@@ -23,10 +23,9 @@ class MyTestCase(unittest.TestCase):
         worker = Pool(1, 2, 512)
         self.assertEqual(2, worker.map(self.task, self.generate_data(30, 100000))[0])
 
-    @unittest.expectedFailure
     def test_count_worker_min(self):
         worker = Pool(15, 20, 512)
-        self.assertEqual(2, worker.map(self.task, self.generate_data(30, 100000))[0])
+        self.assertRaisesRegexp(MemoryError,"The number of required workers is less than the minimum specified.", worker.map,self.task, self.generate_data(30, 100000))
 
     def test_memory(self):
         worker = Pool()
