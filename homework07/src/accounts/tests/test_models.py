@@ -20,4 +20,3 @@ class TestUserModel(TestCase):
     def test_string_representation(self):
         user = User.objects.create_user(email='user@example.com')
         self.assertEqual(str(user), 'user@example.com')
-

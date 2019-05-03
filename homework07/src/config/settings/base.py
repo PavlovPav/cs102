@@ -6,6 +6,7 @@ def root(*dirs):
     base_dir = os.path.join(os.path.dirname(__file__), '..', '..')
     return os.path.abspath(os.path.join(base_dir, *dirs))
 
+
 BASE_DIR = root()
 
 SECRET_KEY = config('SECRET_KEY')
@@ -19,7 +20,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'notes',
     'accounts',
-    'widget_tweaks'
+    'widget_tweaks',
+    'django_wysiwyg'
     ]
 
 MIDDLEWARE = [
@@ -67,15 +69,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    ),
-}
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -93,6 +86,8 @@ STATICFILES_DIRS = [
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
+
 LOGIN_REDIRECT_URL = '/'
 
 DJANGO_WYSIWYG_FLAVOR = 'ckeditor'
+

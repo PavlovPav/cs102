@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -14,6 +13,7 @@ class Note(models.Model):
 
     def __str__(self):
         return self.title
+
     def was_published_recently(self):
         now = timezone.now()
         return now - timezone.timedelta(days=1) <= self.pub_date <= now

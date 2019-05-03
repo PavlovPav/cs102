@@ -18,4 +18,4 @@ class RegisterView(FormView):
         user = authenticate(email=email, password=password)
         login(self.request, user)
         return super(RegisterView, self).form_valid(form)
-# Create your views here.
+

@@ -8,6 +8,7 @@ from accounts.forms import UserCreationForm
 
 User = get_user_model()
 
+
 class RegisterViewTests(TestCase):
 
     def setUp(self):
@@ -48,8 +49,7 @@ class SuccessfulSignUpTests(TestCase):
         self.index_page = reverse('index')
 
     def test_redirects_to_index_page(self):
-        self.assertRedirects(self.response, self.index_page,
-            target_status_code=302)
+        self.assertRedirects(self.response, self.index_page, target_status_code=302)
 
     def test_user_creation(self):
         self.assertTrue(User.objects.exists())
