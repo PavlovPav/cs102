@@ -1,14 +1,13 @@
 import asyncore
 import asynchat
-import socket
-import multiprocessing
 import logging
 import mimetypes
 import os
-from urlparse import parse_qs
-import urllib
-import argparse
+from urllib.parse import urlparse, unquote
 from time import strftime, gmtime
+import email
+import re
+from io import StringIO
 
 
 def url_normalize(path):
@@ -22,7 +21,7 @@ def url_normalize(path):
         else:
             path = path.replace("/..", "", 1)
     path = path.replace("/./", "/")
-    path = path.replace("/.", "")
+    path = unquote(path)
     return path
 
 
@@ -44,67 +43,162 @@ class FileProducer(object):
 
 class AsyncServer(asyncore.dispatcher):
 
-    def __init__(self, host="127.0.0.1", port=9000):
+    def __init__(self, host="127.0.0.1", port=9000, handler_class=None):
         super().__init__()
+        self.handler_class = handler_class
         self.create_socket()
         self.set_reuse_addr()
         self.bind((host, port))
         self.listen(5)
 
-    def handle_accepted(self,sock,addr):
-        log.debug(f"Incoming connection from {addr}")
-        AsyncHTTPRequestHandler(sock)
+    def handle_accepted(self, sock, address):
+        logging.debug(f"Incoming connection from {address}")
+        self.handler_class(sock)
 
     def serve_forever(self):
-        pass
+        try:
+            asyncore.loop()
+        except KeyboardInterrupt:
+            logging.debug("Worker shutdown")
+        finally:
+            self.close()
 
 
 class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def __init__(self, sock):
-        pass
+        super().__init__(sock)
+        self.ibuffer = ''
+        self.obuffer = b''
+        self.set_terminator(b'\r\n\r\n')
+        self.reading_headers = True
+        self.request = ''
+        self.headers = {}
+        self.response = ''
 
     def collect_incoming_data(self, data):
-        pass
+        if not self.reading_headers:
+            self.obuffer = data
+        else:
+            self.ibuffer += data.decode('utf-8')
 
     def found_terminator(self):
-        pass
+        self.parse_request()
 
     def parse_request(self):
-        pass
+        if self.reading_headers:
+            self.reading_headers = False
+            request, headers = self.ibuffer.split('\r\n', 1)
+            self.parse_headers(headers)
+            self.headers['method'], self.headers['path'], self.headers['protocol'] = request.split()
+            self.headers['path'] = url_normalize(self.headers['path'])
+            if self.headers['method'] == 'POST':
+                clen = self.headers['Content-Length']
+                print(self.headers)
+                if clen == '0':
+                    print(clen)
+                    self.send_error(400)
+                    return
+                self.set_terminator(int(clen))
+            else:
+                self.request = urlparse('http://' + self.headers['Host'] + self.headers['path']).path
+                self.ibuffer = ''
+                print(self.headers)
+                self.handle_request()
+        else:
+            self.request = urlparse('http://' + self.headers['Host'] + self.headers['path']).path
+            self.ibuffer = ''
+            self.handle_request()
 
-    def parse_headers(self):
-        pass
+    def parse_headers(self, headers):
+        message = email.message_from_file(StringIO(headers))
+        self.headers = dict(message.items())
 
     def handle_request(self):
-        pass
+        method_name = 'do_' + self.headers['method']
+        if not hasattr(self, method_name):
+            self.send_error(405)
+            return
+        handler = getattr(self, method_name)
+        handler()
 
-    def send_header(self, keyword, value):
-        pass
+    def init_response(self, code, message=None):
+        self.response = f'HTTP/1.1 {code} {message}\r\n'
 
-    def send_error(self, code, message=None):
-        pass
-
-    def send_response(self, code, message=None):
-        pass
+    def add_header(self, keyword, value):
+        self.response += f"{keyword}: {value}\r\n"
 
     def end_headers(self):
-        pass
+        self.response += "\r\n"
 
-    def date_time_string(self):
-        pass
+    def send_error(self, code, message=None):
+        print(code, self.headers)
+        try:
+            short_msg, long_msg = self.responses[code]
+        except KeyError:
+            short_msg, long_msg = '???', '???'
+        if message is None:
+            message = short_msg
+        self.init_response(code, message)
+        self.add_header("Content-Type", "text/plain")
+        self.add_header("Connection", "close")
+        self.end_headers()
+        self.send(bytes(self.response.encode('utf-8')))
+        self.close()
 
     def send_head(self):
-        pass
+        path = url_normalize(os.getcwd() + self.request)
+        if os.path.isdir(path):
+            path = os.path.join(path, "index.html")
+            if not os.path.exists(path):
+                self.send_error(403)
+                return None
+        try:
+            file = bytes()
+            fp = FileProducer(open(path, 'rb'))
+            while True:
+                cur_chunk = fp.more()
+                if not cur_chunk:
+                    break
+                file += cur_chunk
+        except IOError:
+            self.send_error(404)
+            return None
 
-    def translate_path(self, path):
-        pass
+        _, ext = os.path.splitext(path)
+        ctype = mimetypes.types_map[ext.lower()]
+
+        self.init_response(200)
+        self.add_header("Server", "server")
+        self.add_header("Date", "date")
+        self.add_header("Content-Type", ctype)
+        self.add_header("Content-Length", os.path.getsize(path))
+        self.end_headers()
+        return file
 
     def do_GET(self):
-        pass
+        f = self.send_head()
+        if f:
+            resp = bytes(self.response.encode('utf-8')) + f
+            self.send(resp)
+            self.close()
 
     def do_HEAD(self):
-        pass
+        f = self.send_head()
+        if f:
+            resp = bytes(self.response.encode('utf-8'))
+            self.send(resp)
+            self.close()
+
+    def do_POST(self):
+        self.init_response(200, "OK")
+        self.add_header("Content-Type", self.headers['Content-Type'])
+        self.add_header("Connection", "close")
+        self.add_header("Content-Length", self.headers['Content-Length'])
+        self.end_headers()
+        resp = bytes(self.response.encode('utf-8')) + self.obuffer
+        self.send(resp)
+        self.close()
 
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
@@ -118,32 +212,10 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     }
 
 
-def parse_args():
-    parser = argparse.ArgumentParser("Simple asynchronous web-server")
-    parser.add_argument("--host", dest="host", default="127.0.0.1")
-    parser.add_argument("--port", dest="port", type=int, default=9000)
-    parser.add_argument("--log", dest="loglevel", default="info")
-    parser.add_argument("--logfile", dest="logfile", default=None)
-    parser.add_argument("-w", dest="nworkers", type=int, default=1)
-    parser.add_argument("-r", dest="document_root", default=".")
-    return parser.parse_args()
-
-
 def run():
-    server = AsyncServer(host=args.host, port=args.port)
+    server = AsyncServer(host="127.0.0.1", port=9000, handler_class=AsyncHTTPRequestHandler)
     server.serve_forever()
 
 
 if __name__ == "__main__":
-    args = parse_args()
-
-    logging.basicConfig(
-        filename=args.logfile,
-        level=getattr(logging, args.loglevel.upper()),
-        format="%(name)s: %(process)d %(message)s")
-    log = logging.getLogger(__name__)
-
-    DOCUMENT_ROOT = args.document_root
-    for _ in range(args.nworkers):
-        p = multiprocessing.Process(target=run)
-        p.start()
+    run()
