@@ -45,10 +45,15 @@ class FileProducer(object):
 class AsyncServer(asyncore.dispatcher):
 
     def __init__(self, host="127.0.0.1", port=9000):
-        pass
+        super().__init__()
+        self.create_socket()
+        self.set_reuse_addr()
+        self.bind((host, port))
+        self.listen(5)
 
-    def handle_accepted(self):
-        pass
+    def handle_accepted(self,sock,addr):
+        log.debug(f"Incoming connection from {addr}")
+        AsyncHTTPRequestHandler(sock)
 
     def serve_forever(self):
         pass
@@ -139,6 +144,6 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
 
     DOCUMENT_ROOT = args.document_root
-    for _ in xrange(args.nworkers):
+    for _ in range(args.nworkers):
         p = multiprocessing.Process(target=run)
         p.start()
