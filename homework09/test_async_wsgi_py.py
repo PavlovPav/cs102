@@ -4,7 +4,7 @@ import socket
 
 
 class TestAsyncHTTPServer(unittest.TestCase):
-    host = "http://127.0.0.1"
+    host = "http://localhost"
     port = 9000
 
     def setUp(self):
@@ -41,7 +41,7 @@ class TestAsyncHTTPServer(unittest.TestCase):
 
     def test_index_not_found(self):
         """Directory index file absent"""
-        r = requests.get(f'{self.host}:{self.port}/403')
+        r = requests.get(f'{self.host}:{self.port}/403/')
         self.assertEqual(int(r.status_code), 403)
 
     def test_file_not_found(self):
@@ -76,7 +76,6 @@ class TestAsyncHTTPServer(unittest.TestCase):
 
     def test_file_with_spaces(self):
         """Filename with spaces"""
-
         r = requests.get(f'{self.host}:{self.port}/dir1/space%20in%20name.txt')
         data = r.content
         length = r.headers.get('Content-Length')
@@ -97,7 +96,6 @@ class TestAsyncHTTPServer(unittest.TestCase):
 
     def test_document_root_escaping(self):
         """Document root escaping forbidden"""
-        print(f'{self.host}:{self.port}/dir1/../../../../../../../../../../../../../etc/passwd')
         r = requests.get(f'{self.host}:{self.port}/dir1/../../../../../../../../../../../../../etc/passwd')
         self.assertIn(r.status_code, (400, 403, 404))
 
